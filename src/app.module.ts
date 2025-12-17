@@ -5,9 +5,18 @@ import { TenantsModule } from './tenants/tenants.module';
 import { EventsModule } from './events/events.module';
 import { AggregatesModule } from './aggregates/aggregates.module';
 import { JobsModule } from './jobs/jobs.module';
-
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 @Module({
-  imports: [TenantsModule, EventsModule, AggregatesModule, JobsModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TenantsModule,
+    EventsModule,
+    AggregatesModule,
+    JobsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
