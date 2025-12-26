@@ -1,26 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
+import { CreateEventDto } from './dto/create-single-event.dto';
+import { BulkCreateEventDto } from './dto/create-bulk-event.dto';
+import { Repository } from 'typeorm';
+import { Event } from './entities/event.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class EventsService {
-  create(createEventDto: CreateEventDto) {
-    return 'This action adds a new event';
+  constructor(
+    @InjectRepository(Event) private readonly eventsRepo: Repository<Event>,
+  ) {}
+
+  async createOne(tenantId: string, dto: CreateEventDto) {
+    const event = this.eventsRepo.create({
+      ...dto,
+      tenant: { id: tenantId },
+    });
+    return await this.eventsRepo.save(event);
   }
 
-  findAll() {
-    return `This action returns all events`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} event`;
-  }
-
-  update(id: number, updateEventDto: UpdateEventDto) {
-    return `This action updates a #${id} event`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} event`;
+  async createBulk(tenantId: string, dto: BulkCreateEventDto) {
+    const events = dto.events.map((e) => ({
+      ...e,
+      tenant: { id: tenantId },
+    }));
+    return await this.eventsRepo.save(events);
   }
 }

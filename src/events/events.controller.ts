@@ -1,34 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { EventsService } from './events.service';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
+import { CreateEventDto } from './dto/create-single-event.dto';
+import { ApiKeyGuard } from 'src/tenants/guards/apiKey.guard';
+import type { Request } from 'express';
+import { BulkCreateEventDto } from './dto/create-bulk-event.dto';
+import { Event } from './entities/event.entity';
 
 @Controller('events')
+@UseGuards(ApiKeyGuard)
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  create(@Body() createEventDto: CreateEventDto) {
-    return this.eventsService.create(createEventDto);
+  async create(
+    @Req() req: Request,
+    @Body() dto: CreateEventDto,
+  ): Promise<Event> {
+    return await this.eventsService.createOne(req.tenant!.id, dto);
   }
 
-  @Get()
-  findAll() {
-    return this.eventsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
-    return this.eventsService.update(+id, updateEventDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.eventsService.remove(+id);
+  @Post('bulk')
+  async bulkCreate(
+    @Req() req: Request,
+    @Body() dto: BulkCreateEventDto,
+  ): Promise<Event[]> {
+    return await this.eventsService.createBulk(req.tenant!.id, dto);
   }
 }
