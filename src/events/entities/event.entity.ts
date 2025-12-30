@@ -7,11 +7,15 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  RelationId,
 } from 'typeorm';
 
 @Entity('events')
+@Index(['tenantId'])
 @Index(['tenantId', 'occurredAt'])
 @Index(['tenantId', 'type'])
+@Index(['tenantId', 'type', 'occurredAt'])
+// GIN index on data column created via migration
 export class Event {
   @PrimaryGeneratedColumn('increment')
   id: number;
@@ -20,8 +24,8 @@ export class Event {
   @JoinColumn({ name: 'tenantId' })
   tenant: Tenant;
 
-  @Column({ type: 'uuid' })
-  tenantId: string;
+  @RelationId((event: Event) => event.tenant)
+  tenantId: number;
 
   @Column()
   type: string;

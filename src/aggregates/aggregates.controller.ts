@@ -1,34 +1,53 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { AggregatesService } from './aggregates.service';
-import { CreateAggregateDto } from './dto/create-aggregate.dto';
-import { UpdateAggregateDto } from './dto/update-aggregate.dto';
+import { ApiKeyGuard } from 'src/tenants/guards/apiKey.guard';
+import type { Request } from 'express';
+import { IntervalTimeLine } from './types/interval-time-line.enum';
+import { AggregateFiltersDto } from './dto/aggregate-filters.dto';
 
-@Controller('aggregates')
+@Controller('analytics/events')
+@UseGuards(ApiKeyGuard)
 export class AggregatesController {
   constructor(private readonly aggregatesService: AggregatesService) {}
 
-  @Post()
-  create(@Body() createAggregateDto: CreateAggregateDto) {
-    return this.aggregatesService.create(createAggregateDto);
+  /**
+   * Get total event count with optional filters
+   * Query params: from (ISO date), to (ISO date), type (string)
+   */
+  @Get('count')
+  async countEvents(@Req() req: Request, @Query() query: AggregateFiltersDto) {
+    const tenantId = req.tenant!.id;
+    return await this.aggregatesService.countEvents(tenantId, query);
   }
 
-  @Get()
-  findAll() {
-    return this.aggregatesService.findAll();
+  /**
+   * Get event counts grouped by type
+   * Query params: from (ISO date), to (ISO date)
+   */
+  @Get('by-type')
+  async countEventsByType(
+    @Req() req: Request,
+    @Query() query: AggregateFiltersDto,
+  ) {
+    const tenantId = req.tenant!.id;
+    return await this.aggregatesService.countEventsByType(tenantId, query);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.aggregatesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAggregateDto: UpdateAggregateDto) {
-    return this.aggregatesService.update(+id, updateAggregateDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.aggregatesService.remove(+id);
+  /**
+   * Get event counts over time with configurable interval
+   * Query params: from (ISO date), to (ISO date), type (string), interval (day|week|month)
+   */
+  @Get('timeline')
+  async countEventsTimeline(
+    @Req() req: Request,
+    @Query() query: AggregateFiltersDto,
+  ): Promise<{ date: string; total: number }[]> {
+    const tenantId = req.tenant!.id;
+    const interval = query.interval || IntervalTimeLine.day;
+    return await this.aggregatesService.countEventsTimeLine(
+      tenantId,
+      query,
+      interval,
+    );
   }
 }
