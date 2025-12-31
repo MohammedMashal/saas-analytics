@@ -9,4 +9,8 @@ export default Joi.object({
   DB_USERNAME: Joi.string().required(),
   DB_PASSWORD: Joi.string().required(),
   DB_NAME: Joi.string().required(),
+  PORT: Joi.number().port().default(3000),
+  CORS_ORIGIN: Joi.string()
+    .default('*')
+    .description('Comma-separated list of allowed origins or * for all'),
 });

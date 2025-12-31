@@ -2,6 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TenantsController } from './tenants.controller';
 import { TenantsService } from './tenants.service';
+import { ApiKeyThrottleGuard } from './guards/throttle.guard';
 
 describe('TenantsController', () => {
   let controller: TenantsController;
@@ -20,7 +21,10 @@ describe('TenantsController', () => {
           useValue: mockTenantsService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(ApiKeyThrottleGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .compile();
 
     controller = module.get<TenantsController>(TenantsController);
     service = module.get<TenantsService>(TenantsService);

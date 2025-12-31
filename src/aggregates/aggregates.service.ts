@@ -43,10 +43,18 @@ export class AggregatesService {
       throw new BadRequestException('Invalid interval value');
     }
 
+    // Safe interval mapping using enum-based switch
+    const intervalMap: Record<IntervalTimeLine, string> = {
+      [IntervalTimeLine.day]: 'day',
+      [IntervalTimeLine.week]: 'week',
+      [IntervalTimeLine.month]: 'month',
+    };
+
+    const safeInterval = intervalMap[interval];
     const query = this.buildBaseQuery(tenantId, filters);
     query
       .select([
-        `DATE_TRUNC('${interval}',event.occurredAt) AS date`,
+        `DATE_TRUNC('${safeInterval}', event.occurredAt) AS date`,
         'COUNT(*) AS total',
       ])
       .groupBy('date')

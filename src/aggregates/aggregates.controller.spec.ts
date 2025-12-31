@@ -3,6 +3,8 @@ import { AggregatesController } from './aggregates.controller';
 import { AggregatesService } from './aggregates.service';
 import { IntervalTimeLine } from './types/interval-time-line.enum';
 import { AggregateFiltersDto } from './dto/aggregate-filters.dto';
+import { ApiKeyGuard } from 'src/tenants/guards/apiKey.guard';
+import { ApiKeyThrottleGuard } from 'src/tenants/guards/throttle.guard';
 
 describe('AggregatesController', () => {
   let controller: AggregatesController;
@@ -31,7 +33,12 @@ describe('AggregatesController', () => {
           useValue: mockAggregatesService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(ApiKeyGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .overrideGuard(ApiKeyThrottleGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .compile();
 
     controller = module.get<AggregatesController>(AggregatesController);
     service = module.get<AggregatesService>(AggregatesService);

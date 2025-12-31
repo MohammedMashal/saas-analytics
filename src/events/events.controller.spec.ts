@@ -7,6 +7,7 @@ import { CreateEventDto } from './dto/create-single-event.dto';
 import { BulkCreateEventDto } from './dto/create-bulk-event.dto';
 import { Request } from 'express';
 import { ApiKeyGuard } from 'src/tenants/guards/apiKey.guard';
+import { ApiKeyThrottleGuard } from 'src/tenants/guards/throttle.guard';
 
 describe('EventsController', () => {
   let controller: EventsController;
@@ -28,6 +29,8 @@ describe('EventsController', () => {
 
     const module: TestingModule = await moduleBuilder
       .overrideGuard(ApiKeyGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .overrideGuard(ApiKeyThrottleGuard)
       .useValue({ canActivate: jest.fn().mockReturnValue(true) })
       .compile();
 

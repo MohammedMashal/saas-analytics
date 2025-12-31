@@ -1,12 +1,14 @@
 import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { AggregatesService } from './aggregates.service';
 import { ApiKeyGuard } from 'src/tenants/guards/apiKey.guard';
+import { ApiKeyThrottleGuard } from 'src/tenants/guards/throttle.guard';
+import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { IntervalTimeLine } from './types/interval-time-line.enum';
 import { AggregateFiltersDto } from './dto/aggregate-filters.dto';
 
 @Controller('analytics/events')
-@UseGuards(ApiKeyGuard)
+@UseGuards(ApiKeyGuard, ApiKeyThrottleGuard)
 export class AggregatesController {
   constructor(private readonly aggregatesService: AggregatesService) {}
 
@@ -15,6 +17,7 @@ export class AggregatesController {
    * Query params: from (ISO date), to (ISO date), type (string)
    */
   @Get('count')
+  @Throttle({ default: { limit: 100, ttl: 60000 } })
   async countEvents(@Req() req: Request, @Query() query: AggregateFiltersDto) {
     const tenantId = req.tenant!.id;
     return await this.aggregatesService.countEvents(tenantId, query);
@@ -25,6 +28,7 @@ export class AggregatesController {
    * Query params: from (ISO date), to (ISO date)
    */
   @Get('by-type')
+  @Throttle({ default: { limit: 100, ttl: 60000 } })
   async countEventsByType(
     @Req() req: Request,
     @Query() query: AggregateFiltersDto,
@@ -38,6 +42,7 @@ export class AggregatesController {
    * Query params: from (ISO date), to (ISO date), type (string), interval (day|week|month)
    */
   @Get('timeline')
+  @Throttle({ default: { limit: 100, ttl: 60000 } })
   async countEventsTimeline(
     @Req() req: Request,
     @Query() query: AggregateFiltersDto,
