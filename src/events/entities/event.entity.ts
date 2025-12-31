@@ -25,7 +25,7 @@ export class Event {
   tenant: Tenant;
 
   @RelationId((event: Event) => event.tenant)
-  tenantId: number;
+  tenantId: string;
 
   @Column()
   type: string;
